@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: skillbridge-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - skillbridge-network
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: skillbridge-backend
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - FRONTEND_URL=http://localhost:3000
+    depends_on:
+      - redis
+    networks:
+      - skillbridge-network
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: skillbridge-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - skillbridge-network
+    restart: unless-stopped
+
+networks:
+  skillbridge-network:
+    driver: bridge
