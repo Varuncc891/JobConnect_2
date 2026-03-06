@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import axios from "axios";
+import API from "../../utils/api";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { Context } from "../../main";
@@ -26,10 +26,7 @@ const PostJob = () => {
     else if (salaryType === "Ranged Salary") { jobData.salaryFrom = salaryFrom; jobData.salaryTo = salaryTo; }
 
     try {
-      await axios.post("/api/v1/job/post", jobData, {
-        withCredentials: true,
-        headers: { "Content-Type": "application/json" },
-      });
+      await API.post("/job/post", jobData);
       toast.success("Job Posted Successfully!");
       setTitle(""); setDescription(""); setCategory(""); setCountry("");
       setCity(""); setLocation(""); setSalaryFrom(""); setSalaryTo("");

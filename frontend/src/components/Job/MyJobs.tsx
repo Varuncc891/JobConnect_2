@@ -1,4 +1,4 @@
-import axios from "axios";
+import API from "../../utils/api";
 import React, { useContext, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { FaCheck } from "react-icons/fa6";
@@ -20,7 +20,7 @@ const MyJobs = () => {
   const navigateTo = useNavigate();
 
   const { isConnected } = useSSE({
-    url: "http://localhost:4000/api/v1/events",
+    url: `${import.meta.env.VITE_API_URL}/api/v1/events`,
     onMessage: (data) => {
       if (data.type === "NEW_APPLICATION") {
         const jobId = data.application.jobId;
@@ -39,7 +39,7 @@ const MyJobs = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const { data } = await axios.get("/api/v1/job/getmyjobs", { withCredentials: true });
+        const { data } = await API.get("/job/getmyjobs");
         setMyJobs(data.myJobs);
       } catch (error: any) {
         toast.error(error.response?.data?.message || "Error fetching jobs");
@@ -55,7 +55,7 @@ const MyJobs = () => {
 
   const fetchApplicationsForJob = async (jobId: string) => {
     try {
-      const { data } = await axios.get("/api/v1/application/employer/getall", { withCredentials: true });
+      const { data } = await API.get("/application/employer/getall");
       // @ts-ignore
       const jobApplications = data.applications.filter((app: Application) => app.jobId === jobId || app.jobInfo?.jobId === jobId);
       setApplications(jobApplications);
@@ -79,7 +79,7 @@ const MyJobs = () => {
 
   const handleUpdateApplicationStatus = async (applicationId: string, status: "Accepted" | "Rejected") => {
     try {
-      await axios.put(`/api/v1/application/status/${applicationId}`, { status }, { withCredentials: true });
+      await API.put(`/application/status/${applicationId}`, { status });
       toast.success(`Application ${status.toLowerCase()}!`);
       if (selectedJobId) fetchApplicationsForJob(selectedJobId);
     } catch (error: any) {
@@ -94,7 +94,7 @@ const MyJobs = () => {
     const updatedJob = myJobs.find((job) => job._id === jobId);
     if (!updatedJob) return;
     try {
-      await axios.put(`/api/v1/job/update/${jobId}`, updatedJob, { withCredentials: true });
+      await API.put(`/job/update/${jobId}`, updatedJob);
       toast.success("Job updated successfully!");
       setEditingMode(null);
     } catch (error: any) {
@@ -104,7 +104,7 @@ const MyJobs = () => {
 
   const handleDeleteJob = async (jobId: string) => {
     try {
-      await axios.delete(`/api/v1/job/delete/${jobId}`, { withCredentials: true });
+      await API.delete(`/job/delete/${jobId}`);
       toast.success("Job deleted successfully!");
       setMyJobs((prev) => prev.filter((job) => job._id !== jobId));
     } catch (error: any) {

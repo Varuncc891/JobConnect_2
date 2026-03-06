@@ -1,4 +1,4 @@
-import axios from "axios";
+import API from "../../utils/api";
 import React, { useContext, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
@@ -40,10 +40,9 @@ const Application = () => {
     parseFormData.append("resume", file);
 
     try {
-      const { data } = await axios.post("/api/v1/resume/parse", parseFormData, {
-        withCredentials: true,
+      const { data } = await API.post("/resume/parse", parseFormData, {
         headers: { "Content-Type": "multipart/form-data" },
-        onUploadProgress: (progressEvent) => {
+        onUploadProgress: (progressEvent: any) => {
           if (progressEvent.total) {
             setUploadProgress(Math.round((progressEvent.loaded * 100) / progressEvent.total));
           }
@@ -102,8 +101,7 @@ const Application = () => {
     submitFormData.append("jobId", id!);
 
     try {
-      await axios.post("/api/v1/application/post", submitFormData, {
-        withCredentials: true,
+      await API.post("/application/post", submitFormData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setFormData({ name: "", email: "", phone: "", address: "", coverLetter: "" });

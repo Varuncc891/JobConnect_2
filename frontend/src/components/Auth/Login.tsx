@@ -3,7 +3,7 @@ import { MdOutlineMailOutline } from "react-icons/md";
 import { RiLock2Fill } from "react-icons/ri";
 import { Link, Navigate } from "react-router-dom";
 import { FaRegUser } from "react-icons/fa";
-import axios from "axios";
+import API from "../../utils/api";
 import toast from "react-hot-toast";
 import { Context } from "../../main";
 import Footer from "../Layout/Footer";
@@ -18,10 +18,9 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { data } = await axios.post(
-        "/api/v1/user/login",
-        { email, password, role },
-        { headers: { "Content-Type": "application/json" }, withCredentials: true }
+      const { data } = await API.post(
+        "/user/login",
+        { email, password, role }
       );
       toast.success(data.message);
       setUser(data.user);

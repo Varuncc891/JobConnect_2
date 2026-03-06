@@ -45,7 +45,7 @@ const MyApplications = () => {
   }, [fetchApplications]);
 
   const { isConnected } = useSSE({
-    url: "http://localhost:4000/api/v1/events",
+    url: `${import.meta.env.VITE_API_URL}/api/v1/events`,
     onMessage: handleSSEMessage,
     autoConnect: user?.role === "Employer",
   });

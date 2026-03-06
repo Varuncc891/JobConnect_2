@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import axios from "axios";
+import API from "../../utils/api";
 import { Link, useNavigate } from "react-router-dom";
 import { Context } from "../../main";
 import { Job } from "../../types";
@@ -39,7 +39,7 @@ const Jobs = () => {
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
-        const { data } = await axios.get<JobsResponse>(`/api/v1/job/getall?limit=1000`, { withCredentials: true });
+        const { data } = await API.get<JobsResponse>(`/job/getall?limit=1000`);
         const uniqueCategories = [...new Set(data.jobs.map((job) => job.category))];
         setCategoryOptions(uniqueCategories.filter((cat): cat is string => cat !== undefined));
         const uniqueCities = [...new Set(data.jobs.map((job) => job.city))];
@@ -65,7 +65,7 @@ const Jobs = () => {
 
       window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
 
-      const { data } = await axios.get(`/api/v1/job/getall?${params.toString()}`, { withCredentials: true });
+      const { data } = await API.get(`/job/getall?${params.toString()}`);
       setJobs(data.jobs);
       setTotalPages(data.pagination.totalPages);
       setTotalJobs(data.pagination.totalJobs);
