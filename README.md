@@ -1,95 +1,209 @@
-# Job Portal App with MERN Stack
+# JobConnect — AI-Powered Job Portal
 
-A comprehensive job portal application built using the MERN (MongoDB, Express.js, React.js, Node.js) stack. This application allows users to browse job listings, apply for jobs, and manage their applications seamlessly.
+> A production-ready recruitment SaaS platform built with TypeScript, Redis, Docker, and AI resume parsing.  
+> 300ms API responses · AI resume parsing · Email notifications · Fully containerized
+
+[![CI/CD](https://github.com/Varuncc891/JobConnect_2/actions/workflows/ci.yml/badge.svg)](https://github.com/Varuncc891/JobConnect_2/actions)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue)](https://www.typescriptlang.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)](https://www.docker.com/)
+
+🔗 **Live Demo:** https://job-connect-2.vercel.app  
+📖 **API Docs:** https://jc-backend-dxuw.onrender.com/api-docs
+
+---
+
+**picture 1: screenshot of the JobConnect homepage / job listings page**
+
+---
+
+## What is JobConnect?
+
+JobConnect is a full-stack job portal where employers post jobs and job seekers apply. Upload your resume as a PDF and the platform automatically extracts your name, email, phone, and skills using AI, filling in your application form in under 3 seconds. When an employer accepts or rejects an application, the job seeker gets an automated email instantly.
+
+Built to demonstrate production-grade engineering: strict TypeScript, Redis caching, Docker, CI/CD, and OWASP-aligned security.
+
+---
 
 ## Features
 
-- **User Authentication:** Secure authentication using JWT (JSON Web Tokens) for both job seekers and employers.
-- **Job Listings:** Browse through a wide range of job listings fetched from MongoDB.
-- **Application Management:** Job seekers can manage their job applications, and employers can view and manage received applications.
-- **Responsive Design:** Ensures a seamless experience across all devices.
+**TypeScript** — Full backend + frontend migration, strict mode, typed models and components.
 
-## Technologies Used
+**Redis Caching** — Cache-aside pattern, URL-based keys, 5min TTL. Response time dropped from 5s to 120ms.
 
-- **Frontend:** React.js, React Router, Bootstrap
-- **Backend:** Node.js, Express.js, MongoDB
-- **Authentication:** JWT (JSON Web Tokens), Bcrypt (for password hash)
-- **Image Upload:** Cloudinary for storing and managing uploaded images
-- **Deployment:** Vercel (frontend), Render(backend), MongoDB Atlas (database)
+**AI Resume Parser** — Upload PDF → Apilayer API extracts name, email, phone, skills → fallback to pdf-parse if API fails.
 
-## Getting Started
+**Docker + Compose** — Multi-stage builds, Nginx reverse proxy, full stack runs with one command.
 
-To get a local copy up and running follow these simple steps.
+**RBAC** — Job Seeker / Employer / Admin roles, JWT middleware on every protected route.
 
-### Prerequisites
+**Zod Validation** — Schema validation on all POST/PUT endpoints before hitting the controller.
 
-- Node.js installed on your machine with latest version or v22.2.0 above
-- MongoDB Atlas account (or local MongoDB server)
-- Cloudinary account for image storage
+**Email Notifications** — Automated accept/reject emails via Nodemailer when employer updates application status.
 
-### Installation
+**CI/CD** — GitHub Actions runs Jest tests on every PR, deploys on merge to main.
 
-1. Clone the repo:
-   ```sh
-   git clone https://github.com/exclusiveabhi/react-job-portal.git
-   ```
-2. Install NPM packages:
+**Swagger / OpenAPI** — Auto-generated interactive API docs at `/api-docs`.
 
-   ```sh
-   cd react-job-portal
-   cd backend
-   npm install
-   cd..
-   cd frontend
-   npm install
-   ```
+**Pagination + Filtering** — DB-level filtering by category, city, salary. Active filters sync to URL.
 
-3. ## If you don't want to change the`.env` credentials skip step 4 and move to step 5.
+**Deployment** — Render (backend) + Vercel (frontend), cross-domain cookie auth configured.
 
-4. Set up environment variables:
+---
 
-   - Create a `config.env` file after creating a `config folder` in the backend directory, containing the following variables:
+## Tech Stack
 
-   ```env
-   PORT=
-   CLOUDINARY_API_KEY=
-   CLOUDINARY_API_SECRET=
-   CLOUDINARY_CLOUD_NAME=
-   FRONTEND_URL=
-   DB_URL=
-   JWT_SECRET_KEY=
-   JWT_EXPIRE=
-   COOKIE_EXPIRE=
-   ```
+**Backend:** Node.js · Express · TypeScript · MongoDB · Redis  
+**Frontend:** React · TypeScript · Vite · Tailwind CSS  
+**Services:** Apilayer (AI parser) · Nodemailer · Cloudinary  
+**DevOps:** Docker · Nginx · GitHub Actions · Render · Vercel
 
-   Replace each value with your specific configuration details.
+---
 
-5. Run the application backend (make sure you are in `/backend` directory) :
+## Architecture
 
-   ```sh
-   node server.js
-   ```
+```
+┌──────────────┐      ┌────────────────┐      ┌────────────────┐
+│  React +     │────▶ │  Nginx         │────▶ │  Express +     │
+│  TypeScript  │      │  Reverse Proxy │      │  TypeScript    │
+│  (Vercel)    │      │  /api/* → 4000 │      │  (Render)      │
+└──────────────┘      └────────────────┘      └───────┬────────┘
+                                                       │
+                                        ┌──────────────┼──────────────┐
+                                        ▼              ▼              ▼
+                                   ┌─────────┐   ┌─────────┐   ┌───────────┐
+                                   │ MongoDB │   │  Redis  │   │Cloudinary │
+                                   └─────────┘   └─────────┘   └───────────┘
+```
 
-6. Run the application frontend (make sure you are in `/frontend` directory) :
-   ```sh
-   npm run dev
-   ```
-7. Open your browser and navigate to `http://localhost:5173` to view the app.
+---
 
-## Contributing
+## Quick Start
 
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+### Docker (Recommended)
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request (`we will merge within 24 hour`)
+```bash
+git clone https://github.com/Varuncc891/JobConnect_2
+cd JobConnect_2
+cp backend/.env.example backend/.env
+# fill in your values
+docker-compose up
+```
 
-## Please give a star ⭐ to the repository if you like it.
+### Manual
 
-## Contact
+```bash
+# Terminal 1 — Backend
+cd backend && npm install && npm run dev
 
-Abhishek Rajput - [GitHub](https://github.com/exclusiveabhi)
+# Terminal 2 — Frontend
+cd frontend && npm install && npm run dev
+```
 
-Project Link: [https://github.com/exclusiveabhi/react-job-portal.git](https://github.com/exclusiveabhi/react-job-portal.git)
+Requires MongoDB and Redis running locally.
+
+---
+
+## Environment Variables
+
+`backend/.env`:
+
+```env
+MONGO_URI=your_mongodb_uri
+JWT_SECRET_KEY=your_jwt_secret
+JWT_EXPIRE=7d
+COOKIE_EXPIRE=7
+REDIS_URL=redis://localhost:6379
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+APILAYER_API_KEY=your_apilayer_key
+EMAIL_USER=your_gmail@gmail.com
+EMAIL_PASS=your_gmail_app_password
+FRONTEND_URL=http://localhost:3000
+PORT=4000
+```
+
+`frontend/.env`:
+
+```env
+VITE_API_URL=http://localhost:4000
+```
+
+---
+
+## API Docs
+
+Interactive Swagger UI at `/api-docs`.
+
+**picture 2: screenshot of the Swagger UI at /api-docs**
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/v1/user/register` | Public | Register |
+| POST | `/api/v1/user/login` | Public | Login, sets httpOnly cookie |
+| GET | `/api/v1/job/getall` | Public | Jobs with pagination + filters |
+| POST | `/api/v1/job/post` | Employer | Post a job |
+| POST | `/api/v1/application/post` | Job Seeker | Apply for a job |
+| PATCH | `/api/v1/application/:id/status` | Employer | Accept or reject |
+| POST | `/api/v1/resume/parse` | Authenticated | AI resume parsing |
+
+---
+
+## Testing
+
+```bash
+cd backend
+npm test               # run all tests
+npm test -- --coverage # with coverage
+```
+
+20+ tests covering Zod schemas, utility functions, and middleware.
+
+**picture 3: screenshot of GitHub Actions showing a passing workflow run**
+
+---
+
+## Security
+
+**Authentication** — JWTs stored in `httpOnly` cookies, inaccessible to JavaScript. Passwords hashed with bcrypt (10 rounds), never stored in plaintext.
+
+**Authorization** — RBAC middleware on every protected route. Wrong role returns 403.
+
+**Input Validation** — Zod schemas on all POST/PUT endpoints. Rejects malformed input before it reaches the database.
+
+**Rate Limiting** — `express-rate-limit` configured on all `/api/` routes. 100 requests per 15 minutes per IP.
+
+**CORS** — Explicit `origin: process.env.FRONTEND_URL`, no wildcard.
+
+**Secrets** — All credentials in environment variables, never in source code. `.env` is in `.gitignore`.
+
+| OWASP Risk | Mitigation |
+|------------|------------|
+| A01 Broken Access Control | RBAC middleware on all protected routes |
+| A02 Cryptographic Failures | bcrypt, HTTPS in production |
+| A03 Injection | Zod validation, Mongoose parameterized queries |
+| A05 Security Misconfiguration | CORS whitelist, secrets in env vars |
+| A07 Auth Failures | httpOnly cookies, JWT expiry, bcrypt |
+
+---
+
+## Project Structure
+
+```
+JobConnect_2/
+├── backend/src/
+│   ├── config/        # DB, Redis, Swagger
+│   ├── controllers/   # Route handlers
+│   ├── middleware/    # Auth, RBAC, cache, validate
+│   ├── models/        # Mongoose + TypeScript interfaces
+│   ├── routes/        # Express routers + Swagger JSDoc
+│   ├── services/      # AI parser, email
+│   ├── utils/         # AppError, catchAsync, sendToken
+│   └── validators/    # Zod schemas
+├── frontend/src/
+│   ├── components/
+│   ├── hooks/
+│   └── utils/         # Axios API instance
+├── .github/workflows/ # CI/CD
+└── docker-compose.yml
+```
