@@ -25,7 +25,7 @@ export const handleSSEConnection = async (req: AuthRequest, res: Response) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Origin', process.env.FRONTEND_URL!);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.flushHeaders();
 
