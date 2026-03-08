@@ -10,6 +10,8 @@ import applicationRouter from "./routes/applicationRoutes";
 import { errorMiddleware } from "./middlewares/error";
 import resumeRouter from "./routes/resumeRoutes";
 import sseRoutes from './routes/sseRoutes';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './config/swagger.config';
 
 const app = express();
 config({ path: "./config/config.env" });
@@ -48,5 +50,7 @@ app.use('/api/v1', sseRoutes);
 dbConnection();
 
 app.use(errorMiddleware);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 
 export default app;
