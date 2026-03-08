@@ -3,10 +3,6 @@
 > A production-ready recruitment SaaS platform built with TypeScript, Redis, Docker, and AI resume parsing.  
 > 300ms API responses · AI resume parsing · Email notifications · Fully containerized
 
-[![CI/CD](https://github.com/Varuncc891/JobConnect_2/actions/workflows/ci.yml/badge.svg)](https://github.com/Varuncc891/JobConnect_2/actions)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue)](https://www.typescriptlang.org/)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)](https://www.docker.com/)
-
 🔗 **Live Demo:** https://job-connect-2.vercel.app  
 📖 **API Docs:** https://jc-backend-dxuw.onrender.com/api-docs
 
