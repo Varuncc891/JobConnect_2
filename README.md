@@ -132,19 +132,29 @@ VITE_API_URL=http://localhost:4000
 Interactive Swagger UI at `/api-docs`.
 
 ![JobConnect UI](./assets/apilist.png)
-![JobConnect UI](./assets/enterrequirements.png)
-![JobConnect UI](./assets/result1.png)
 ![JobConnect UI](./assets/result2.png)
+
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| POST | `/api/v1/user/register` | Public | Register |
-| POST | `/api/v1/user/login` | Public | Login, sets httpOnly cookie |
-| GET | `/api/v1/job/getall` | Public | Jobs with pagination + filters |
-| POST | `/api/v1/job/post` | Employer | Post a job |
+| POST | `/api/v1/user/register` | Public | Register a new user |
+| POST | `/api/v1/user/login` | Public | Login and receive auth cookie |
+| GET | `/api/v1/user/logout` | Authenticated | Logout and clear auth cookie |
+
+| POST | `/api/v1/job/post` | Employer | Post a new job |
+| GET | `/api/v1/job/getall` | Public | Get all jobs with pagination and filtering |
+| GET | `/api/v1/job/getmyjobs` | Employer | Get jobs posted by logged-in employer |
+| GET | `/api/v1/job/{id}` | Public | Get a single job by ID |
+| PUT | `/api/v1/job/update/{id}` | Employer | Update a job |
+| DELETE | `/api/v1/job/delete/{id}` | Employer | Delete a job |
+
 | POST | `/api/v1/application/post` | Job Seeker | Apply for a job |
-| PATCH | `/api/v1/application/:id/status` | Employer | Accept or reject |
-| POST | `/api/v1/resume/parse` | Authenticated | AI resume parsing |
+| GET | `/api/v1/application/employer/getall` | Employer | Get all received applications |
+| GET | `/api/v1/application/jobseeker/getall` | Job Seeker | Get all submitted applications |
+| PUT | `/api/v1/application/status/{id}` | Employer | Accept or reject an application |
+| DELETE | `/api/v1/application/delete/{id}` | Job Seeker | Delete an application |
+
+| POST | `/api/v1/resume/parse` | Authenticated | Parse resume PDF and extract data |
 
 ---
 
