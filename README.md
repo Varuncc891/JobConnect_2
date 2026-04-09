@@ -28,6 +28,8 @@ Built to demonstrate production-grade engineering: strict TypeScript, Redis cach
 
 **AI Resume Parser** — Upload PDF → Apilayer API extracts name, email, phone, skills → fallback to pdf-parse if API fails.
 
+![Demo](./assets/resumeparser.png)
+
 **Docker + Compose** — Multi-stage builds, Nginx reverse proxy, full stack runs with one command.
 
 **RBAC** — Job Seeker / Employer / Admin roles, JWT middleware on every protected route.
