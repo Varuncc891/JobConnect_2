@@ -8,7 +8,6 @@ import ErrorHandler from '../../middlewares/error';
 jest.mock('../../models/user.model');
 jest.mock('../../utils/jwtToken');
 
-// Extend Request type for tests
 interface RequestWithUser extends Request {
   user?: any;
 }
@@ -39,6 +38,9 @@ describe('User Controller', () => {
     };
 
     jest.clearAllMocks();
+
+    // Re-apply after clearAllMocks — sendToken is a void mock, just needs to not throw
+    (sendToken as jest.Mock).mockImplementation(() => {});
   });
 
   describe('register', () => {
@@ -67,7 +69,7 @@ describe('User Controller', () => {
 
     test('should return 400 if email already exists', async () => {
       mockReq.body = validUserData;
-      
+
       (User.findOne as jest.Mock).mockResolvedValue({ email: validUserData.email });
 
       await register(
@@ -84,9 +86,9 @@ describe('User Controller', () => {
 
     test('should create user and send token with valid data', async () => {
       mockReq.body = validUserData;
-      
+
       (User.findOne as jest.Mock).mockResolvedValue(null);
-      
+
       const mockCreatedUser = {
         ...validUserData,
         _id: '507f1f77bcf86cd799439011'
@@ -134,7 +136,7 @@ describe('User Controller', () => {
 
     test('should return 400 if user not found', async () => {
       mockReq.body = validLoginData;
-      
+
       const mockQuery = {
         select: jest.fn().mockResolvedValue(null)
       };
@@ -154,13 +156,13 @@ describe('User Controller', () => {
 
     test('should return 400 if password is incorrect', async () => {
       mockReq.body = validLoginData;
-      
+
       const mockUser = {
         email: validLoginData.email,
         role: validLoginData.role,
-        comparePassword: jest.fn().mockResolvedValue(false)
+        comparePassword: jest.fn().mockResolvedValue(false) // wrong password
       };
-      
+
       const mockQuery = {
         select: jest.fn().mockResolvedValue(mockUser)
       };
@@ -179,14 +181,14 @@ describe('User Controller', () => {
     });
 
     test('should return 404 if role does not match', async () => {
-      mockReq.body = validLoginData;
-      
+      mockReq.body = validLoginData; // role: 'Job Seeker'
+
       const mockUser = {
         email: validLoginData.email,
-        role: 'Employer',
-        comparePassword: jest.fn().mockResolvedValue(true)
+        role: 'Employer',           // different role in DB
+        comparePassword: jest.fn().mockResolvedValue(true) // password correct
       };
-      
+
       const mockQuery = {
         select: jest.fn().mockResolvedValue(mockUser)
       };
@@ -206,13 +208,13 @@ describe('User Controller', () => {
 
     test('should send token with valid credentials', async () => {
       mockReq.body = validLoginData;
-      
+
       const mockUser = {
         email: validLoginData.email,
         role: validLoginData.role,
         comparePassword: jest.fn().mockResolvedValue(true)
       };
-      
+
       const mockQuery = {
         select: jest.fn().mockResolvedValue(mockUser)
       };
@@ -262,7 +264,7 @@ describe('User Controller', () => {
         name: 'John Doe',
         email: 'john@example.com'
       };
-      
+
       mockReq.user = mockUser;
 
       await getUser(

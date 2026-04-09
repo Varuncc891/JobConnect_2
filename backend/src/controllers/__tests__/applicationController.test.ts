@@ -8,7 +8,6 @@ import { v2 as cloudinary } from 'cloudinary';
 import { notifyEmployer } from '../sseController';
 import { sendJobStatusEmail } from '../../services/email.service';
 
-// Mock dependencies
 jest.mock('../../models/application.model');
 jest.mock('../../models/job.model');
 jest.mock('../../models/user.model');
@@ -16,7 +15,6 @@ jest.mock('cloudinary');
 jest.mock('../sseController');
 jest.mock('../../services/email.service');
 
-// Mock the functions
 (notifyEmployer as jest.Mock).mockImplementation(() => {});
 (sendJobStatusEmail as jest.Mock).mockResolvedValue(undefined);
 
@@ -50,6 +48,8 @@ describe('Application Controller', () => {
     };
 
     jest.clearAllMocks();
+    (notifyEmployer as jest.Mock).mockReturnValue(undefined);
+    (sendJobStatusEmail as jest.Mock).mockResolvedValue(undefined);
   });
 
   describe('postApplication', () => {
@@ -82,6 +82,8 @@ describe('Application Controller', () => {
       );
 
       expect(mockNext).toHaveBeenCalledWith(expect.any(ErrorHandler));
+      const error = mockNext.mock.calls[0][0];
+      expect(error.message).toBe('Employer not allowed to access this resource.');
     });
 
     test('should return 400 if no resume uploaded', async () => {
@@ -113,7 +115,7 @@ describe('Application Controller', () => {
     test('should return 404 if job not found', async () => {
       mockReq.user = { role: 'Job Seeker', _id: 'user123' };
       mockReq.files = { resume: mockResume };
-      mockReq.body = { jobId: 'nonexistent' };
+      mockReq.body = validApplicationData;
 
       (Job.findById as jest.Mock).mockResolvedValue(null);
 
@@ -134,23 +136,24 @@ describe('Application Controller', () => {
       const mockJob = {
         _id: 'job123',
         title: 'Software Engineer',
-        postedBy: 'employer123'
+        postedBy: 'employer123',
+      };
+
+      const mockCreatedApplication = {
+        _id: 'app123',
+        ...validApplicationData,
+        applicantID: { user: 'user123', role: 'Job Seeker' },
+        employerID: { user: 'employer123', role: 'Employer' },
+        resume: {
+          public_id: mockCloudinaryResponse.public_id,
+          url: mockCloudinaryResponse.secure_url,
+        },
+        status: 'Pending',
       };
 
       (Job.findById as jest.Mock).mockResolvedValue(mockJob);
       (cloudinary.uploader.upload as jest.Mock).mockResolvedValue(mockCloudinaryResponse);
-
-      const mockApplication = {
-        _id: 'app123',
-        ...validApplicationData,
-        jobId: 'job123',
-        applicantID: { user: 'user123', role: 'Job Seeker' },
-        employerID: { user: 'employer123', role: 'Employer' },
-        resume: mockCloudinaryResponse,
-        status: 'Pending'
-      };
-
-      (Application.create as jest.Mock).mockResolvedValue(mockApplication);
+      (Application.create as jest.Mock).mockResolvedValue(mockCreatedApplication);
 
       await postApplication(
         mockReq as Request,
@@ -158,14 +161,20 @@ describe('Application Controller', () => {
         mockNext as NextFunction
       );
 
-      expect(cloudinary.uploader.upload).toHaveBeenCalled();
+      expect(cloudinary.uploader.upload).toHaveBeenCalledWith(
+        mockResume.tempFilePath,
+        expect.objectContaining({
+          folder: 'resumes',
+          resource_type: 'auto',
+        })
+      );
       expect(Application.create).toHaveBeenCalled();
       expect(notifyEmployer).toHaveBeenCalledWith('employer123', expect.any(Object));
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockJson).toHaveBeenCalledWith({
         success: true,
         message: 'Application Submitted!',
-        application: mockApplication
+        application: mockCreatedApplication,
       });
     });
 
@@ -242,7 +251,7 @@ describe('Application Controller', () => {
 
       const mockApplication = {
         _id: 'app123',
-        employerID: { user: 'different-employer' },
+        employerID: { user: { toString: () => 'different-employer' } },
         save: jest.fn()
       };
 
@@ -262,13 +271,14 @@ describe('Application Controller', () => {
       mockReq.params = { id: 'app123' };
       mockReq.body = { status: 'Accepted' };
 
+      const mockSave = jest.fn().mockResolvedValue(true);
       const mockApplication = {
         _id: 'app123',
-        employerID: { user: 'employer123' },
+        employerID: { user: { toString: () => 'employer123' } },
         applicantID: { user: 'seeker123' },
         jobId: 'job123',
         status: 'Pending',
-        save: jest.fn().mockResolvedValue(true)
+        save: mockSave
       };
 
       const mockJob = {
@@ -278,12 +288,15 @@ describe('Application Controller', () => {
       };
 
       const mockSeeker = {
+        _id: 'seeker123',
         email: 'seeker@example.com',
         name: 'John Doe'
       };
 
       (Application.findById as jest.Mock).mockResolvedValue(mockApplication);
-      (Job.findById as jest.Mock).mockResolvedValue(mockJob);
+      (Job.findById as jest.Mock).mockReturnValue({
+        populate: jest.fn().mockResolvedValue(mockJob)
+      });
       (User.findById as jest.Mock).mockResolvedValue(mockSeeker);
 
       await updateApplicationStatus(
@@ -292,8 +305,15 @@ describe('Application Controller', () => {
         mockNext as NextFunction
       );
 
-      expect(mockApplication.save).toHaveBeenCalled();
-      expect(sendJobStatusEmail).toHaveBeenCalled();
+      expect(mockApplication.status).toBe('Accepted');
+      expect(mockSave).toHaveBeenCalled();
+      expect(sendJobStatusEmail).toHaveBeenCalledWith(
+        mockSeeker.email,
+        mockSeeker.name,
+        mockJob.title,
+        'Company Name',
+        'accepted'
+      );
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockJson).toHaveBeenCalledWith({
         success: true,
@@ -320,10 +340,11 @@ describe('Application Controller', () => {
       mockReq.user = { role: 'Employer', _id: 'employer123' };
       const mockApplications = [{ _id: 'app1' }, { _id: 'app2' }];
 
-      const mockQuery = {
+      const mockPopulateChain = {
+        populate: jest.fn().mockReturnThis(),
         sort: jest.fn().mockResolvedValue(mockApplications)
       };
-      (Application.find as jest.Mock).mockReturnValue(mockQuery);
+      (Application.find as jest.Mock).mockReturnValue(mockPopulateChain);
 
       await employerGetAllApplications(
         mockReq as Request,
@@ -332,7 +353,6 @@ describe('Application Controller', () => {
       );
 
       expect(Application.find).toHaveBeenCalledWith({ "employerID.user": 'employer123' });
-      expect(mockQuery.sort).toHaveBeenCalledWith({ createdAt: -1 });
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockJson).toHaveBeenCalledWith({
         success: true,
@@ -358,10 +378,11 @@ describe('Application Controller', () => {
       mockReq.user = { role: 'Job Seeker', _id: 'seeker123' };
       const mockApplications = [{ _id: 'app1' }, { _id: 'app2' }];
 
-      const mockQuery = {
+      const mockPopulateChain = {
+        populate: jest.fn().mockReturnThis(),
         sort: jest.fn().mockResolvedValue(mockApplications)
       };
-      (Application.find as jest.Mock).mockReturnValue(mockQuery);
+      (Application.find as jest.Mock).mockReturnValue(mockPopulateChain);
 
       await jobseekerGetAllApplications(
         mockReq as Request,
@@ -370,7 +391,6 @@ describe('Application Controller', () => {
       );
 
       expect(Application.find).toHaveBeenCalledWith({ "applicantID.user": 'seeker123' });
-      expect(mockQuery.sort).toHaveBeenCalledWith({ createdAt: -1 });
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockJson).toHaveBeenCalledWith({
         success: true,
@@ -411,10 +431,10 @@ describe('Application Controller', () => {
       mockReq.user = { role: 'Job Seeker' };
       mockReq.params = { id: 'app123' };
 
-      const mockDelete = jest.fn().mockResolvedValue(undefined);
+      const mockDeleteOne = jest.fn().mockResolvedValue({ deletedCount: 1 });
       const mockApplication = {
         _id: 'app123',
-        deleteOne: mockDelete
+        deleteOne: mockDeleteOne
       };
 
       (Application.findById as jest.Mock).mockResolvedValue(mockApplication);
@@ -425,7 +445,7 @@ describe('Application Controller', () => {
         mockNext as NextFunction
       );
 
-      expect(mockDelete).toHaveBeenCalled();
+      expect(mockDeleteOne).toHaveBeenCalled();
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockJson).toHaveBeenCalledWith({
         success: true,

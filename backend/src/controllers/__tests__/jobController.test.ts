@@ -8,10 +8,6 @@ import { clearJobListingsCache, clearSingleJobCache } from '../../middlewares/ca
 jest.mock('../../models/job.model');
 jest.mock('../../middlewares/cache.middleware');
 
-// Mock the clear cache functions to resolve immediately
-(clearJobListingsCache as jest.Mock).mockResolvedValue(undefined);
-(clearSingleJobCache as jest.Mock).mockResolvedValue(undefined);
-
 interface RequestWithUser extends Request {
   user?: any;
 }
@@ -41,6 +37,10 @@ describe('Job Controller', () => {
     };
 
     jest.clearAllMocks();
+
+    // Re-apply after clearAllMocks — these MUST be here not at top level
+    (clearJobListingsCache as jest.Mock).mockResolvedValue(undefined);
+    (clearSingleJobCache as jest.Mock).mockResolvedValue(undefined);
   });
 
   describe('getAllJobs', () => {
@@ -50,7 +50,7 @@ describe('Job Controller', () => {
     ];
 
     beforeEach(() => {
-      // Mock the chain properly
+      // Full Mongoose chain: .sort().skip().limit().populate()
       const mockQuery = {
         sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
@@ -121,6 +121,15 @@ describe('Job Controller', () => {
     test('should handle pagination', async () => {
       mockReq.query = { page: '2', limit: '10' };
       (Job.countDocuments as jest.Mock).mockResolvedValue(25);
+
+      // Rebuild mock chain with new countDocuments value
+      const mockQuery = {
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        populate: jest.fn().mockResolvedValue(mockJobs)
+      };
+      (Job.find as jest.Mock).mockReturnValue(mockQuery);
 
       await getAllJobs(
         mockReq as Request,
@@ -334,9 +343,9 @@ describe('Job Controller', () => {
       mockReq.params = { id: 'job123' };
 
       const mockDelete = jest.fn().mockResolvedValue(undefined);
-      const mockJob = { 
-        _id: 'job123', 
-        deleteOne: mockDelete 
+      const mockJob = {
+        _id: 'job123',
+        deleteOne: mockDelete
       };
 
       (Job.findById as jest.Mock).mockResolvedValue(mockJob);

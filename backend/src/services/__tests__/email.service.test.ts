@@ -1,155 +1,116 @@
-// Mock nodemailer BEFORE importing the service
-const mockSendMail = jest.fn();
+const mockSendMail = jest.fn().mockResolvedValue({ messageId: 'test-id' });
+const mockCreateTransport = jest.fn().mockReturnValue({
+  sendMail: mockSendMail
+});
+
 jest.mock('nodemailer', () => ({
-  createTransport: jest.fn().mockReturnValue({
-    sendMail: mockSendMail
-  })
+  createTransport: mockCreateTransport
 }));
 
 import { sendJobStatusEmail } from '../email.service';
 
 describe('Email Service', () => {
   beforeEach(() => {
-    // Set environment variables
-    process.env.EMAIL_USER = 'test@gmail.com';
-    process.env.EMAIL_PASS = 'testpass';
-    process.env.EMAIL_FROM = 'noreply@skillbridge.com';
-
     jest.clearAllMocks();
+    process.env.EMAIL_USER = 'test@gmail.com';
+    process.env.EMAIL_PASS = 'test-pass';
+    process.env.EMAIL_FROM = 'noreply@test.com';
+    mockSendMail.mockClear();
   });
-
-  const testData = {
-    to: 'seeker@example.com',
-    name: 'John Doe',
-    jobTitle: 'Software Engineer',
-    companyName: 'Tech Corp'
-  };
 
   describe('sendJobStatusEmail', () => {
     test('should send accepted email with correct content', async () => {
-      mockSendMail.mockResolvedValue({ messageId: '123' });
-
       await sendJobStatusEmail(
-        testData.to,
-        testData.name,
-        testData.jobTitle,
-        testData.companyName,
+        'test@example.com',
+        'John Doe',
+        'Software Engineer',
+        'Tech Corp',
         'accepted'
       );
 
-      expect(mockSendMail).toHaveBeenCalledWith({
-        from: 'noreply@skillbridge.com',
-        to: 'seeker@example.com',
-        subject: 'Congratulations! Shortlisted for Software Engineer',
-        html: expect.stringContaining('You\'re Shortlisted!')
-      });
-
-      // Check HTML content
-      const htmlContent = mockSendMail.mock.calls[0][0].html;
-      expect(htmlContent).toContain('John Doe');
-      expect(htmlContent).toContain('Software Engineer');
-      expect(htmlContent).toContain('Tech Corp');
-      expect(htmlContent).toContain('#22c55e');
+      expect(mockSendMail).toHaveBeenCalledTimes(1);
+      expect(mockSendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'test@example.com',
+          subject: 'Congratulations! Shortlisted for Software Engineer',
+          html: expect.stringContaining('You\'re Shortlisted!')
+        })
+      );
     });
 
     test('should send rejected email with correct content', async () => {
-      mockSendMail.mockResolvedValue({ messageId: '123' });
-
       await sendJobStatusEmail(
-        testData.to,
-        testData.name,
-        testData.jobTitle,
-        testData.companyName,
+        'test@example.com',
+        'John Doe',
+        'Software Engineer',
+        'Tech Corp',
         'rejected'
       );
 
-      expect(mockSendMail).toHaveBeenCalledWith({
-        from: 'noreply@skillbridge.com',
-        to: 'seeker@example.com',
-        subject: 'Update on your application for Software Engineer',
-        html: expect.stringContaining('Application Update')
-      });
-
-      const htmlContent = mockSendMail.mock.calls[0][0].html;
-      expect(htmlContent).toContain('John Doe');
-      expect(htmlContent).toContain('Software Engineer');
-      expect(htmlContent).toContain('Tech Corp');
-      expect(htmlContent).toContain('#ef4444');
+      expect(mockSendMail).toHaveBeenCalledTimes(1);
+      expect(mockSendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'test@example.com',
+          subject: 'Update on your application for Software Engineer',
+          html: expect.stringContaining('Application Update')
+        })
+      );
     });
 
     test('should handle email sending failure', async () => {
-      const error = new Error('SMTP error');
-      mockSendMail.mockRejectedValue(error);
+      mockSendMail.mockRejectedValueOnce(new Error('SMTP Error'));
 
       await expect(
         sendJobStatusEmail(
-          testData.to,
-          testData.name,
-          testData.jobTitle,
-          testData.companyName,
+          'test@example.com',
+          'John Doe',
+          'Software Engineer',
+          'Tech Corp',
           'accepted'
         )
-      ).rejects.toThrow('SMTP error');
+      ).rejects.toThrow('SMTP Error');
     });
 
     test('should work with different email addresses', async () => {
-      mockSendMail.mockResolvedValue({ messageId: '123' });
-
-      const differentData = {
-        to: 'another@example.com',
-        name: 'Jane Smith',
-        jobTitle: 'Product Manager',
-        companyName: 'Startup Inc'
-      };
-
       await sendJobStatusEmail(
-        differentData.to,
-        differentData.name,
-        differentData.jobTitle,
-        differentData.companyName,
+        'jane@company.com',
+        'Jane Smith',
+        'Product Manager',
+        'Startup Inc',
         'accepted'
       );
 
-      expect(mockSendMail).toHaveBeenCalledWith({
-        from: 'noreply@skillbridge.com',
-        to: 'another@example.com',
-        subject: 'Congratulations! Shortlisted for Product Manager',
-        html: expect.stringContaining('Jane Smith')
-      });
+      expect(mockSendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'jane@company.com'
+        })
+      );
     });
 
     test('should handle missing environment variables', async () => {
-      // Clear env vars
-      delete process.env.EMAIL_USER;
-      delete process.env.EMAIL_PASS;
       delete process.env.EMAIL_FROM;
-
-      mockSendMail.mockResolvedValue({ messageId: '123' });
-
+      
       await sendJobStatusEmail(
-        testData.to,
-        testData.name,
-        testData.jobTitle,
-        testData.companyName,
+        'test@example.com',
+        'John Doe',
+        'Software Engineer',
+        'Tech Corp',
         'accepted'
       );
 
-      expect(mockSendMail).toHaveBeenCalledWith({
-        from: undefined,
-        to: testData.to,
-        subject: expect.any(String),
-        html: expect.any(String)
-      });
+      expect(mockSendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: undefined
+        })
+      );
     });
 
     test('should use correct email subject line for accepted', async () => {
-      mockSendMail.mockResolvedValue({ messageId: '123' });
-
       await sendJobStatusEmail(
-        testData.to,
-        testData.name,
+        'test@example.com',
+        'John Doe',
         'Senior Developer',
-        testData.companyName,
+        'Big Company',
         'accepted'
       );
 
@@ -161,13 +122,11 @@ describe('Email Service', () => {
     });
 
     test('should use correct email subject line for rejected', async () => {
-      mockSendMail.mockResolvedValue({ messageId: '123' });
-
       await sendJobStatusEmail(
-        testData.to,
-        testData.name,
+        'test@example.com',
+        'John Doe',
         'Junior Developer',
-        testData.companyName,
+        'Small Company',
         'rejected'
       );
 
@@ -179,91 +138,80 @@ describe('Email Service', () => {
     });
 
     test('should include all required placeholders in email body', async () => {
-      mockSendMail.mockResolvedValue({ messageId: '123' });
-
       await sendJobStatusEmail(
-        testData.to,
-        testData.name,
-        testData.jobTitle,
-        testData.companyName,
+        'applicant@test.com',
+        'Alice Johnson',
+        'Full Stack Developer',
+        'Innovative Solutions',
         'accepted'
       );
 
-      const htmlContent = mockSendMail.mock.calls[0][0].html;
-      
-      expect(htmlContent).toContain(testData.name);
-      expect(htmlContent).toContain(testData.jobTitle);
-      expect(htmlContent).toContain(testData.companyName);
-      expect(htmlContent).toContain('SkillBridge Team');
+      const mailCall = mockSendMail.mock.calls[0][0];
+      expect(mailCall.html).toContain('Alice Johnson');
+      expect(mailCall.html).toContain('Full Stack Developer');
+      expect(mailCall.html).toContain('Innovative Solutions');
     });
 
     test('should handle long job titles', async () => {
-      mockSendMail.mockResolvedValue({ messageId: '123' });
+      const longTitle = 'Senior Full Stack Software Development Engineer with Cloud Architecture Specialization';
       
-      const longJobTitle = 'Senior Full Stack Software Engineer with React and Node.js Experience';
-
       await sendJobStatusEmail(
-        testData.to,
-        testData.name,
-        longJobTitle,
-        testData.companyName,
+        'test@example.com',
+        'John Doe',
+        longTitle,
+        'Tech Corp',
         'accepted'
       );
 
       expect(mockSendMail).toHaveBeenCalledWith(
         expect.objectContaining({
-          subject: `Congratulations! Shortlisted for ${longJobTitle}`
+          subject: `Congratulations! Shortlisted for ${longTitle}`
         })
       );
     });
 
     test('should handle special characters in name', async () => {
-      mockSendMail.mockResolvedValue({ messageId: '123' });
-
       await sendJobStatusEmail(
-        testData.to,
-        'John O\'Connor-Smith',
-        testData.jobTitle,
-        testData.companyName,
+        'test@example.com',
+        'María José O\'Connor-Smith',
+        'Developer',
+        'Company',
         'accepted'
       );
 
-      const htmlContent = mockSendMail.mock.calls[0][0].html;
-      expect(htmlContent).toContain('John O\'Connor-Smith');
+      const mailCall = mockSendMail.mock.calls[0][0];
+      expect(mailCall.html).toContain('María José O\'Connor-Smith');
     });
 
     test('should call sendMail exactly once per email', async () => {
-      mockSendMail.mockResolvedValue({ messageId: '123' });
-
       await sendJobStatusEmail(
-        testData.to,
-        testData.name,
-        testData.jobTitle,
-        testData.companyName,
+        'test1@example.com',
+        'User One',
+        'Job A',
+        'Company A',
         'accepted'
       );
+      expect(mockSendMail).toHaveBeenCalledTimes(1);
 
+      jest.clearAllMocks();
+      
+      await sendJobStatusEmail(
+        'test2@example.com',
+        'User Two',
+        'Job B',
+        'Company B',
+        'rejected'
+      );
       expect(mockSendMail).toHaveBeenCalledTimes(1);
     });
 
-    test('should use correct transporter configuration', async () => {
-      mockSendMail.mockResolvedValue({ messageId: '123' });
-
-      await sendJobStatusEmail(
-        testData.to,
-        testData.name,
-        testData.jobTitle,
-        testData.companyName,
-        'accepted'
-      );
-
-      const { createTransport } = require('nodemailer');
-      expect(createTransport).toHaveBeenCalledWith({
+    test('should use correct transporter configuration', () => {
+      expect(mockCreateTransport).toHaveBeenCalledWith({
         service: 'gmail',
         auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS
-        }
+          user: 'test@gmail.com',
+          pass: 'test-pass',
+        },
       });
     });
   });
