@@ -1,7 +1,7 @@
 # JobConnect — AI-Powered Job Portal
 
 > A production-ready recruitment SaaS platform built with TypeScript, Redis, Docker, and AI resume parsing.  
-> 300ms API responses · AI resume parsing · Email notifications · Fully containerized
+> 300ms API responses · AI resume parsing · 📧 Email notifications · 🐳 Fully containerized
 
 🔗 **Live Demo:** https://job-connect-2.vercel.app  
 📖 **API Docs:** https://jc-backend-dxuw.onrender.com/api-docs
