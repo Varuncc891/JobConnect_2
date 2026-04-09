@@ -22,29 +22,29 @@ Built to demonstrate production-grade engineering: strict TypeScript, Redis cach
 
 ## Features
 
-**TypeScript** — Full backend + frontend migration, strict mode, typed models and components.
+- **TypeScript** — Full backend + frontend migration, strict mode, typed models and components.
 
-**Redis Caching** — Cache-aside pattern, URL-based keys, 5min TTL. Response time dropped from 5s to 120ms.
+- **Redis Caching** — Cache-aside pattern, URL-based keys, 5min TTL. Response time dropped from 5s to 120ms.
 
-**AI Resume Parser** — Upload PDF → Apilayer API extracts name, email, phone, skills → fallback to pdf-parse if API fails.
+- **AI Resume Parser** — Upload PDF → Apilayer API extracts name, email, phone, skills → fallback to pdf-parse if API fails.
 
 ![Demo](./assets/resumeparser.png)
 
-**Docker + Compose** — Multi-stage builds, Nginx reverse proxy, full stack runs with one command.
+- **Docker + Compose** — Multi-stage builds, Nginx reverse proxy, full stack runs with one command.
 
-**RBAC** — Job Seeker / Employer / Admin roles, JWT middleware on every protected route.
+- **RBAC** — Job Seeker / Employer / Admin roles, JWT middleware on every protected route.
 
-**Zod Validation** — Schema validation on all POST/PUT endpoints before hitting the controller.
+- **Zod Validation** — Schema validation on all POST/PUT endpoints before hitting the controller.
 
-**Email Notifications** — Automated accept/reject emails via Nodemailer when employer updates application status.
+- **Email Notifications** — Automated accept/reject emails via Nodemailer when employer updates application status.
 
-**CI/CD** — GitHub Actions runs Jest tests on every PR, deploys on merge to main.
+- **CI/CD** — GitHub Actions runs Jest tests on every PR, deploys on merge to main.
 
-**Swagger / OpenAPI** — Auto-generated interactive API docs at `/api-docs`.
+- **Swagger / OpenAPI** — Auto-generated interactive API docs at `/api-docs`.
 
-**Pagination + Filtering** — DB-level filtering by category, city, salary. Active filters sync to URL.
+- **Pagination + Filtering** — DB-level filtering by category, city, salary. Active filters sync to URL.
 
-**Deployment** — Render (backend) + Vercel (frontend), cross-domain cookie auth configured.
+- **Deployment** — Render (backend) + Vercel (frontend), cross-domain cookie auth configured.
 
 ---
 
