@@ -8,7 +8,7 @@
 
 ---
 
-**picture 1: screenshot of the JobConnect homepage / job listings page**
+![JobConnect UI](./assets/homepage.png)
 
 ---
 
@@ -131,7 +131,10 @@ VITE_API_URL=http://localhost:4000
 
 Interactive Swagger UI at `/api-docs`.
 
-**picture 2: screenshot of the Swagger UI at /api-docs**
+![JobConnect UI](./assets/apilist.png)
+![JobConnect UI](./assets/enterrequirements.png)
+![JobConnect UI](./assets/result1.png)
+![JobConnect UI](./assets/result2.png)
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
